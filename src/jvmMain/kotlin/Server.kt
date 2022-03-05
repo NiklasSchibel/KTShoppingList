@@ -41,6 +41,15 @@ fun main() {
             StandardCompressionOptions.gzip()
         }
         routing {
+            get("/") {
+                call.respondText(
+                    this::class.java.classLoader.getResource("index.html")!!.readText(),
+                    ContentType.Text.Html
+                )
+            }
+            static("/") {
+                resources("")
+            }
             route(ShoppingListItem.path) {
                 get {
                     call.respond(shoppingList)
@@ -53,15 +62,6 @@ fun main() {
                     val id = call.parameters["id"]?.toInt() ?: error("Invalid delete request")
                     shoppingList.removeIf { it.id == id }
                     call.respond(HttpStatusCode.OK)
-                }
-                get("/") {
-                    call.respondText(
-                        this::class.java.classLoader.getResource("index.html")!!.readText(),
-                        ContentType.Text.Html
-                    )
-                }
-                static("/") {
-                    resources("")
                 }
             }
         }
