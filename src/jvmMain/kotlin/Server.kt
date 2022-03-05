@@ -14,11 +14,18 @@ import org.litote.kmongo.reactivestreams.KMongo
 import com.mongodb.ConnectionString
 import io.netty.handler.codec.compression.StandardCompressionOptions
 import io.netty.handler.codec.compression.StandardCompressionOptions.gzip
-import org.graalvm.compiler.hotspot.nodes.type.MethodPointerStamp
-import org.graalvm.compiler.hotspot.nodes.type.MethodPointerStamp.method
+//import org.graalvm.compiler.hotspot.nodes.type.MethodPointerStamp
+//import org.graalvm.compiler.hotspot.nodes.type.MethodPointerStamp.method
 
 
 fun main() {
+
+
+    val shoppingList = mutableListOf(
+        ShoppingListItem("Cucumbers 🥒", 1),
+        ShoppingListItem("Tomatoes 🍅", 2),
+        ShoppingListItem("Orange Juice 🍊", 3)
+    )
 
     embeddedServer(Netty, 9090) {
         install(ContentNegotiation) {
@@ -34,8 +41,28 @@ fun main() {
             StandardCompressionOptions.gzip()
         }
         routing {
-            get("/hello") {
-                call.respondText("Hello, API!")
+            route(ShoppingListItem.path) {
+                get {
+                    call.respond(shoppingList)
+                }
+                post {
+                    shoppingList += call.receive<ShoppingListItem>()
+                    call.respond(HttpStatusCode.OK)
+                }
+                delete("/{id}") {
+                    val id = call.parameters["id"]?.toInt() ?: error("Invalid delete request")
+                    shoppingList.removeIf { it.id == id }
+                    call.respond(HttpStatusCode.OK)
+                }
+                get("/") {
+                    call.respondText(
+                        this::class.java.classLoader.getResource("index.html")!!.readText(),
+                        ContentType.Text.Html
+                    )
+                }
+                static("/") {
+                    resources("")
+                }
             }
         }
     }.start(wait = true)
