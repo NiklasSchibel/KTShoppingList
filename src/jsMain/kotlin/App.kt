@@ -23,6 +23,21 @@ val App = FC<Props> {
             li {
                 key = item.toString()
                 +"[${item.priority}] ${item.desc} "
+                onClick = {
+                    scope.launch {
+                        deleteShoppingListItem(item)
+                        shoppingList = getShoppingList()
+                    }
+                }
+            }
+        }
+    }
+    InputComponent {
+        onSubmit = { input ->
+            val cartItem = ShoppingListItem(input.replace("!", ""), input.count { it == '!' })
+            scope.launch {
+                addShoppingListItem(cartItem)
+                shoppingList = getShoppingList()
             }
         }
     }
