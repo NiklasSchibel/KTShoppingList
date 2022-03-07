@@ -20,12 +20,16 @@ import io.netty.handler.codec.compression.StandardCompressionOptions.gzip
 
 fun main() {
 
-    val client = KMongo.createClient().coroutine
-    val database = client.getDatabase("shoppingListKotlin")
+    val connectionString: ConnectionString? = System.getenv("MONGODB_URI")?.let {
+        ConnectionString("$it?retryWrites=false")
+    }
+
+    val client = if (connectionString != null) KMongo.createClient(connectionString).coroutine else KMongo.createClient().coroutine
+    val database = client.getDatabase(connectionString?.database ?: "shoppingListKotlin")
     val collection = database.getCollection<ShoppingListItem>()
 
-
-    embeddedServer(Netty, 9090) {
+    val port = System.getenv("PORT")?.toInt() ?: 9090
+    embeddedServer(Netty, port) {
         install(ContentNegotiation) {
             json()
         }
